@@ -252,8 +252,6 @@ _Bool point_in_polygon(double x, double y)
 {
     struct Line_Double current_line = {.m = 0, .c = y, .x1 = x, .y1 = y, .x2 = INF, .y2 = y};
 
-
-
     int result;
     int counter = 0;
     int vertex_intersection_counter = 0;
@@ -309,6 +307,7 @@ _Bool point_in_polygon(double x, double y)
                 }
                 case 1: {
 
+
                     //Check if both neighbours of the intersection vertex are on the same side of the line, ignore it.
                     int neighbours[2][2];
                     int neighbour_count = 0;
@@ -333,7 +332,7 @@ _Bool point_in_polygon(double x, double y)
                                                                                             neighbours[1][0]) -
                                                                                            current_line.c);
 
-                    if (!((val1 > 0 && val2 > 0) || (val1 < 0 && val2 < 0))) {
+                    if (!((val1 > 0 && val2 > 0) || (val1 < 0 && val2 < 0)) && val1 && val2) {
                         ++vertex_intersection_counter;
                         ++counter;
                         break;
@@ -352,8 +351,9 @@ int main() {
 
     double longest_line = 0;
 
-    char file_name[60] = "polygon2.txt";
-    //scanf("%s", file_name);
+    char file_name[60];
+    printf("Please enter the name of the file\n");
+    scanf("%s", file_name);
 
     FILE *file = fopen(file_name, "r");
 
