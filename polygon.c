@@ -4,7 +4,7 @@
 #include <math.h>
 
 #define INF INT32_MAX
-#define Test 1
+//#define Test 1
 
 /*
  * Check strict math settings
@@ -42,9 +42,21 @@ int **vertices;
 int num_vertices;
 int num_edges;
 
+
+double r(double x) {
+    if (!((int)fabs(x))) {
+        if ((x > 0 && x - 0.0000001 < 0) || (x < 0 && x + 0.0000001 > 0))
+            return round(x);
+    }
+    if(((int) (fabs(x) + 0.0000001) > (int) fabs(x)) || ((int) (fabs(x) - 0.0000001) < (int) fabs(x))) {
+        return round(x);
+    }
+    return x;
+}
+
 struct Line FindMC(int x1, int y1, int x2, int y2) {
 
-    struct Line line = { .m = (x1 == x2 ? INF : ((1.0 * (y2 - y1)) / (x2 - x1))), .c = ((x1 == x2) ? (0 - x1) : (y1 - (x1 * (1.0 * (y2 - y1) / (x2 - x1)))))};
+    struct Line line = { .m = (x1 == x2 ? INF : r(((1.0 * (y2 - y1)) / (x2 - x1)))), .c = r(((x1 == x2) ? (0 - x1) : (y1 - (x1 * (1.0 * (y2 - y1) / (x2 - x1))))))};
     return line;
 }
 
@@ -72,8 +84,8 @@ double lines_intersection[2];
 double intersection_vertex_number;
 
 _Bool on_same_side(int const point1[], int const point2[], struct Line current_line) {
-    double value1 = current_line.m == INF ? (point1[0] + current_line.c) : (point1[1] - current_line.m * point1[0] - current_line.c);
-    double value2 = current_line.m == INF ? (point2[0] + current_line.c) : (point2[1] - current_line.m * point2[0] - current_line.c);
+    double value1 = current_line.m == INF ? r(point1[0] + current_line.c) : r(point1[1] - current_line.m * point1[0] - current_line.c);
+    double value2 = current_line.m == INF ? r(point2[0] + current_line.c) : r(point2[1] - current_line.m * point2[0] - current_line.c);
     return ((value1 > 0 && value2 > 0) || (value1 < 0 && value2 < 0)) ? 1 : 0;
 }
 
@@ -105,7 +117,7 @@ _Bool consider_point(struct intersept in, int x1, int y1, int x2, int y2, struct
                 return 0;
         }
 
-        if (edge_equations[index].m == slope || edge_equations[(index + 1) % num_edges].m == slope ||
+        if (edge_equations[index].m == slope /*|| edge_equations[(index -1) % num_edges].m == slope */||
             edge_equations[(index - 1) % num_edges].m == slope) {
             int index_overlap = -1000;      //Initialized to this to try and make it an invalid array index
             if (edge_equations[index].m == slope) {
@@ -119,7 +131,7 @@ _Bool consider_point(struct intersept in, int x1, int y1, int x2, int y2, struct
                                                                                  ? edge_equations[index].y2
                                                                                  : edge_equations[index].y1), 2)))
                     return 0;
-            } else if (edge_equations[(index + 1) % num_edges].m == slope) {
+            } /*else if (edge_equations[(index + 1) % num_edges].m == slope) {
                 index_overlap = (index + 1) % num_edges;
                 if (sqrt(pow(x2 - in.x, 2) + pow(y2 - in.y, 2)) < sqrt(pow(x2 - (edge_equations[(index + 1) %
                                                                                                 num_edges].x1 == in.x &&
@@ -137,8 +149,8 @@ _Bool consider_point(struct intersept in, int x1, int y1, int x2, int y2, struct
                                                                                                   num_edges].y2
                                                                                  : edge_equations[(index + 1) %
                                                                                                   num_edges].y1), 2)))
-                    return 0;
-            } else if (edge_equations[(index - 1) % num_edges].m == slope) {
+                return 0;
+         }*/else if (edge_equations[(index - 1) % num_edges].m == slope) {
                 index_overlap = (index - 1) % num_edges;
                 if (sqrt(pow(x2 - in.x, 2) + pow(y2 - in.y, 2)) < sqrt(pow(x2 - (edge_equations[(index - 1) %
                                                                                                 num_edges].x1 == in.x &&
@@ -169,8 +181,8 @@ _Bool consider_point(struct intersept in, int x1, int y1, int x2, int y2, struct
             else
                 return 1;
         } else {
-            int point1[] = {edge_equations[(index - 1) % num_edges].x2, edge_equations[(index - 1) % num_edges].y2};
-            int point2[] = {edge_equations[index].x1, edge_equations[index].y1};
+            int point1[] = {edge_equations[(index - 1) % num_edges].x1, edge_equations[(index - 1) % num_edges].y1};
+            int point2[] = {edge_equations[index].x2, edge_equations[index].y2};
             if (on_same_side(point1, point2, current_line))
                 return 0;
             else
@@ -185,6 +197,13 @@ _Bool consider_point(struct intersept in, int x1, int y1, int x2, int y2, struct
 double find_length_using_intersepts(int intersept_counter, int x1, int y1, int x2, int y2, struct Line current_line) {
 
     double sideA = DBL_MAX, sideB = DBL_MAX;
+
+#ifdef Test
+
+    for (int j = 0; j < intersept_counter; ++j)
+        printf("%lf %lf\n", intersepts[j].x, intersepts[j].y);
+
+#endif
 
     for (int i = 0; i < intersept_counter; ++i) {
 
@@ -218,8 +237,8 @@ int find_line_intersection(struct Line_Double l1, struct Line l2) //0 if interse
 {
     if (l1.m != l2.m) {
         double x_intersect =
-                l2.m == INF || l1.m == INF ? (l2.m == INF ? 0 - l2.c : 0 - l1.c) : (l2.c - l1.c) / (l1.m - l2.m);
-        double y_intersect = l2.m == INF ? (x_intersect * l1.m + l1.c) : (x_intersect * l2.m + l2.c);
+                l2.m == INF || l1.m == INF ? (l2.m == INF ? 0 - l2.c : 0 - l1.c) : r((l2.c - l1.c) / (l1.m - l2.m));
+        double y_intersect = l2.m == INF ? r(x_intersect * l1.m + l1.c) : r(x_intersect * l2.m + l2.c);
 
         lines_intersection[0] = x_intersect;
         lines_intersection[1] = y_intersect;
@@ -299,6 +318,11 @@ _Bool point_in_polygon(double x, double y)
 
         } else {
             result = find_line_intersection(current_line, edge_equations[i]);
+
+#ifdef Test
+            if (result)
+                printf("");
+#endif
 
             switch (result) {
                 case 2: {
@@ -395,6 +419,11 @@ int main() {
     for (int i = 0; i < num_vertices; ++i)
         for (int j = i + 1; j < num_vertices; ++j) {
 
+#ifdef Test
+            if (i == 46 && j == 50)
+                printf("\n");
+#endif
+
             intersept_counter = 0;
             invalid = 0;
             //Construct the current line we want to consider
@@ -421,9 +450,9 @@ int main() {
                                                                                                               : 0 -
                                                                                                                 current_line.c)
                                                                                 :
-                            (edge_equations[k].c - current_line.c) / (current_line.m - edge_equations[k].m);
+                            r((edge_equations[k].c - current_line.c) / (current_line.m - edge_equations[k].m));
 
-                    y_intersect = edge_equations[k].m == INF ? (x_intersect * current_line.m + current_line.c) : (
+                    y_intersect = edge_equations[k].m == INF ? r(x_intersect * current_line.m + current_line.c) : r(
                             x_intersect * edge_equations[k].m + edge_equations[k].c);
 
                     //Checks if the line intersects the edge within or on the 2 end vertices
@@ -465,9 +494,12 @@ int main() {
                 }
 
             if (!invalid) {
+
                 double current_line_length_possible = find_length_using_intersepts(intersept_counter, vertices[i][0],
                                                                                    vertices[i][1], vertices[j][0],
                                                                                    vertices[j][1], current_line);
+
+
                 longest_line =
                         current_line_length_possible > longest_line ? current_line_length_possible : longest_line;
             }
