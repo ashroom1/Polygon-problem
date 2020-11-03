@@ -371,15 +371,11 @@ _Bool point_in_polygon(double x, double y)
     return counter % 2;
 }
 
-int main() {
+int main(int argc, char *argv[]) {
 
     double longest_line = 0;
 
-    char file_name[60];
-    printf("Please enter the name of the file\n");
-    scanf("%s", file_name);
-
-    FILE *file = fopen(file_name, "r");
+    FILE *file = fopen(argv[1], "r");
 
     fscanf(file, "%d", &num_vertices);
     num_edges = num_vertices;
